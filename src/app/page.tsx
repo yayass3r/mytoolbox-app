@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { toolsData, categories, type ToolDef } from '@/lib/tools-data'
 import AdBanner from '@/components/ui/AdBanner'
+import { recordPageView, recordToolUsageAnalytics, isToolActive, getSetting, validateToken } from '@/lib/storage'
 
 // Tool components
 import PasswordGenerator from '@/components/tools/PasswordGenerator'
@@ -51,13 +52,6 @@ const toolComponents: Record<string, React.ComponentType> = {
   'qr-code-generator': QrCodeGenerator,
 }
 
-const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  'الأدوات الأساسية': Wrench,
-  'أدوات النصوص': Type,
-  'أدوات التصميم': Paintbrush,
-  'أدوات الرياضيات': Sigma,
-}
-
 export default function ToolboxApp() {
   const [currentView, setCurrentView] = useState<View>('home')
   const [activeTool, setActiveTool] = useState<ToolDef | null>(null)
@@ -73,32 +67,23 @@ export default function ToolboxApp() {
   })
   const [adminToken, setAdminToken] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('toolbox_admin_token')
+    const token = localStorage.getItem('toolbox_admin_token')
+    if (token) {
+      try {
+        const parsed = JSON.parse(token)
+        if (validateToken(parsed.token)) return parsed.token
+      } catch { /* ignore */ }
+    }
+    return null
   })
-  const [tools, setTools] = useState<ToolDef[]>(toolsData)
-  const [toolsLoaded, setToolsLoaded] = useState(false)
+  const [appName, setAppName] = useState('مجموعة أدواتي')
 
-  // Record page view & fetch tools from DB
+  // Record page view & load settings
   useEffect(() => {
-    fetch('/api/analytics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType: 'page_view' }),
-    }).catch(() => {})
-
-    fetch('/api/admin/tools')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setTools(prev =>
-            prev.map(tool => {
-              const dbTool = data.find((t: { slug: string; isActive: boolean }) => t.slug === tool.slug)
-              return dbTool ? { ...tool, isActive: dbTool.isActive } : tool
-            })
-          )
-        }
-      })
-      .catch(() => {})
+    if (getSetting('analytics_enabled') !== 'false') {
+      recordPageView()
+    }
+    setAppName(getSetting('app_name') || 'مجموعة أدواتي')
   }, [])
 
   const toggleFavorite = (slug: string) => {
@@ -116,16 +101,14 @@ export default function ToolboxApp() {
     setCurrentView('tool')
 
     // Record tool usage
-    fetch('/api/analytics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType: 'tool_used', toolName: tool.slug }),
-    }).catch(() => {})
+    if (getSetting('analytics_enabled') !== 'false') {
+      recordToolUsageAnalytics(tool.slug)
+    }
   }, [])
 
   const handleAdminLogin = (token: string) => {
     setAdminToken(token)
-    localStorage.setItem('toolbox_admin_token', token)
+    localStorage.setItem('toolbox_admin_token', JSON.stringify({ token, expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }))
   }
 
   const handleAdminLogout = () => {
@@ -135,8 +118,8 @@ export default function ToolboxApp() {
   }
 
   // Filter tools
-  const filteredTools = tools.filter(tool => {
-    if (!tool.isActive) return false
+  const filteredTools = toolsData.filter(tool => {
+    if (!isToolActive(tool.slug)) return false
     const matchesSearch = searchQuery === '' ||
       tool.nameAr.includes(searchQuery) ||
       tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -146,7 +129,7 @@ export default function ToolboxApp() {
   })
 
   // Get unique categories from tools
-  const activeCategories = ['all', ...new Set(tools.filter(t => t.isActive).map(t => t.category))]
+  const activeCategories = ['all', ...new Set(toolsData.filter(t => isToolActive(t.slug)).map(t => t.category))]
 
   const renderBottomNav = () => (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
@@ -203,7 +186,7 @@ export default function ToolboxApp() {
                     <Grid3X3 className="w-6 h-6" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold">مجموعة أدواتي</h1>
+                    <h1 className="text-2xl font-bold">{appName}</h1>
                     <p className="text-white/70 text-sm">أدوات مجانية للجميع</p>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,20 +10,10 @@ import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, Trash2, RefreshCw } from 'lucide-react'
 import { adNetworks, adPositions } from '@/lib/tools-data'
-
-interface Ad {
-  id: string
-  name: string
-  adNetwork: string
-  adCode: string | null
-  position: string
-  isActive: boolean
-  priority: number
-}
+import { getAds, saveAd, updateAd, deleteAd, type AdItem } from '@/lib/storage'
 
 export default function AdManager() {
-  const [ads, setAds] = useState<Ad[]>([])
-  const [loading, setLoading] = useState(true)
+  const [ads, setAds] = useState<AdItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -33,61 +23,30 @@ export default function AdManager() {
     priority: 0,
   })
 
-  const fetchAds = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/ads')
-      const data = await res.json()
-      setAds(data || [])
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
+  const fetchAds = () => {
+    setAds(getAds())
   }
 
   useEffect(() => {
     fetchAds()
   }, [])
 
-  const handleCreate = async () => {
-    try {
-      const res = await fetch('/api/admin/ads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-      if (res.ok) {
-        setDialogOpen(false)
-        setFormData({ name: '', adNetwork: 'google', adCode: '', position: 'bottom', priority: 0 })
-        fetchAds()
-      }
-    } catch {
-      // silently fail
-    }
+  const handleCreate = () => {
+    saveAd(formData)
+    setDialogOpen(false)
+    setFormData({ name: '', adNetwork: 'google', adCode: '', position: 'bottom', priority: 0 })
+    fetchAds()
   }
 
-  const handleToggle = async (id: string, isActive: boolean) => {
-    try {
-      await fetch('/api/admin/ads', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, isActive: !isActive }),
-      })
-      fetchAds()
-    } catch {
-      // silently fail
-    }
+  const handleToggle = (id: string, isActive: boolean) => {
+    updateAd(id, { isActive: !isActive })
+    fetchAds()
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return
-    try {
-      await fetch(`/api/admin/ads?id=${id}`, { method: 'DELETE' })
-      fetchAds()
-    } catch {
-      // silently fail
-    }
+    deleteAd(id)
+    fetchAds()
   }
 
   const getNetworkName = (id: string) => adNetworks.find(n => n.id === id)?.name || id
@@ -145,10 +104,11 @@ export default function AdManager() {
       </div>
 
       <div className="space-y-3 max-h-[60vh] overflow-y-auto scrollbar-thin">
-        {loading ? (
-          <div className="text-center py-8 text-muted-foreground">جاري التحميل...</div>
-        ) : ads.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">لا توجد إعلانات</div>
+        {ads.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-base mb-1">لا توجد إعلانات</p>
+            <p className="text-sm">اضغط &quot;إضافة إعلان&quot; لإنشاء إعلان جديد</p>
+          </div>
         ) : (
           ads.map((ad) => (
             <Card key={ad.id} className="border-0 shadow-sm">

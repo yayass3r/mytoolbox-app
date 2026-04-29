@@ -1,59 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Save } from 'lucide-react'
-
-interface Setting {
-  key: string
-  value: string | null
-  type: string
-}
+import { getSettings, getSetting, updateSetting, hashPassword } from '@/lib/storage'
+import { verifyAdmin } from '@/lib/storage'
 
 export default function SettingsPanel() {
-  const [settings, setSettings] = useState<Setting[]>([])
-  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState(() => getSettings())
   const [saving, setSaving] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordMsg, setPasswordMsg] = useState('')
+  const [adminEmail, setAdminEmail] = useState(() => getSetting('admin_email') || 'admin@toolbox.com')
 
-  const fetchSettings = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/settings')
-      const data = await res.json()
-      setSettings(data || [])
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchSettings()
-  }, [])
-
-  const getSetting = (key: string): string => {
-    return settings.find(s => s.key === key)?.value || ''
-  }
-
-  const updateSetting = async (key: string, value: string) => {
-    try {
-      await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, value }),
-      })
-      setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s))
-    } catch {
-      // silently fail
-    }
+  const handleSettingChange = (key: string, value: string) => {
+    updateSetting(key, value)
+    setSettings(getSettings())
   }
 
   const handlePasswordChange = async () => {
@@ -69,18 +36,11 @@ export default function SettingsPanel() {
     setSaving(true)
     setPasswordMsg('')
     try {
-      const res = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'admin_password', value: newPassword }),
-      })
-      if (res.ok) {
-        setPasswordMsg('تم تغيير كلمة المرور بنجاح')
-        setNewPassword('')
-        setConfirmPassword('')
-      } else {
-        setPasswordMsg('فشل تغيير كلمة المرور')
-      }
+      const hash = await hashPassword(newPassword)
+      updateSetting('admin_password_hash', hash)
+      setPasswordMsg('تم تغيير كلمة المرور بنجاح')
+      setNewPassword('')
+      setConfirmPassword('')
     } catch {
       setPasswordMsg('حدث خطأ')
     } finally {
@@ -88,7 +48,9 @@ export default function SettingsPanel() {
     }
   }
 
-  if (loading) return <div className="text-center py-8 text-muted-foreground">جاري التحميل...</div>
+  const getCurrentSetting = (key: string): string => {
+    return settings.find(s => s.key === key)?.value || ''
+  }
 
   return (
     <div className="space-y-4">
@@ -103,15 +65,15 @@ export default function SettingsPanel() {
           <div className="space-y-2">
             <Label>اسم التطبيق</Label>
             <Input
-              value={getSetting('app_name')}
-              onChange={(e) => updateSetting('app_name', e.target.value)}
+              value={getCurrentSetting('app_name')}
+              onChange={(e) => handleSettingChange('app_name', e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <Label>وصف التطبيق</Label>
             <Input
-              value={getSetting('app_description')}
-              onChange={(e) => updateSetting('app_description', e.target.value)}
+              value={getCurrentSetting('app_description')}
+              onChange={(e) => handleSettingChange('app_description', e.target.value)}
             />
           </div>
         </CardContent>
@@ -129,8 +91,8 @@ export default function SettingsPanel() {
               <p className="text-xs text-muted-foreground">عرض الإعلانات في التطبيق</p>
             </div>
             <Switch
-              checked={getSetting('ads_enabled') === 'true'}
-              onCheckedChange={(v) => updateSetting('ads_enabled', String(v))}
+              checked={getCurrentSetting('ads_enabled') === 'true'}
+              onCheckedChange={(v) => handleSettingChange('ads_enabled', String(v))}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -139,8 +101,8 @@ export default function SettingsPanel() {
               <p className="text-xs text-muted-foreground">تتبع استخدام الأدوات والمشاهدات</p>
             </div>
             <Switch
-              checked={getSetting('analytics_enabled') === 'true'}
-              onCheckedChange={(v) => updateSetting('analytics_enabled', String(v))}
+              checked={getCurrentSetting('analytics_enabled') === 'true'}
+              onCheckedChange={(v) => handleSettingChange('analytics_enabled', String(v))}
             />
           </div>
         </CardContent>
@@ -153,8 +115,17 @@ export default function SettingsPanel() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>كلمة المرور الحالية</Label>
+            <Input
+              id="current-password"
+              type="password"
+              placeholder="••••••••"
+            />
+          </div>
+          <div className="space-y-2">
             <Label>كلمة المرور الجديدة</Label>
             <Input
+              id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -164,6 +135,7 @@ export default function SettingsPanel() {
           <div className="space-y-2">
             <Label>تأكيد كلمة المرور</Label>
             <Input
+              id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

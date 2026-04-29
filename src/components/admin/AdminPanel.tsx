@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -9,42 +9,56 @@ import AdManager from './AdManager'
 import ToolManager from './ToolManager'
 import AnalyticsDashboard from './AnalyticsDashboard'
 import SettingsPanel from './SettingsPanel'
+import { getAds, getToolsState, getAnalytics } from '@/lib/storage'
 
 interface AdminPanelProps {
   onLogout: () => void
 }
 
-interface DashboardStats {
-  totalTools: number
-  totalUsage: number
-  activeAds: number
-  pageViews: number
+export default function AdminPanel({ onLogout }: AdminPanelProps) {
+  useEffect(() => {
+    // Load data from localStorage
+    const ads = getAds()
+    const tools = getToolsState()
+    const analytics = getAnalytics()
+    // Data is now available in localStorage
+    void ads
+    void tools
+    void analytics
+  }, [])
+
+  return (
+    <AdminPanelContent onLogout={onLogout} />
+  )
 }
 
-export default function AdminPanel({ onLogout }: AdminPanelProps) {
-  const [stats, setStats] = useState<DashboardStats>({ totalTools: 0, totalUsage: 0, activeAds: 0, pageViews: 0 })
+function AdminPanelContent({ onLogout }: { onLogout: () => void }) {
+  const [stats, setStats] = useState(() => {
+    const tools = getToolsState()
+    const ads = getAds()
+    const analytics = getAnalytics()
+    return {
+      totalTools: tools.length || 10,
+      totalUsage: tools.reduce((acc, t) => acc + (t.usageCount || 0), 0),
+      activeAds: ads.filter(a => a.isActive).length,
+      pageViews: analytics.dailyViews.reduce((acc, d) => acc + d.count, 0),
+    }
+  })
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
-    let cancelled = false
-    Promise.all([
-      fetch('/api/admin/tools'),
-      fetch('/api/admin/ads'),
-      fetch('/api/admin/analytics'),
-    ]).then(async ([toolsRes, adsRes, analyticsRes]) => {
-      if (cancelled) return
-      const tools = await toolsRes.json()
-      const ads = await adsRes.json()
-      const analytics = await analyticsRes.json()
-
+    const interval = setInterval(() => {
+      const tools = getToolsState()
+      const ads = getAds()
+      const analytics = getAnalytics()
       setStats({
-        totalTools: tools.length || 0,
-        totalUsage: tools.reduce((acc: number, t: { usageCount: number }) => acc + (t.usageCount || 0), 0),
-        activeAds: (ads || []).filter((a: { isActive: boolean }) => a.isActive).length,
-        pageViews: (analytics?.dailyViews || []).reduce((acc: number, d: { count: number }) => acc + d.count, 0),
+        totalTools: tools.length || 10,
+        totalUsage: tools.reduce((acc, t) => acc + (t.usageCount || 0), 0),
+        activeAds: ads.filter(a => a.isActive).length,
+        pageViews: analytics.dailyViews.reduce((acc, d) => acc + d.count, 0),
       })
-    }).catch(() => {})
-    return () => { cancelled = true }
+    }, 2000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -187,3 +201,5 @@ export default function AdminPanel({ onLogout }: AdminPanelProps) {
     </div>
   )
 }
+
+import { useState } from 'react'

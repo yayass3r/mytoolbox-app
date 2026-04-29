@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { getAnalytics } from '@/lib/storage'
 
 interface DailyView {
   date: string
@@ -15,33 +17,17 @@ interface ToolUsage {
   count: number
 }
 
-interface AnalyticsData {
-  dailyViews: DailyView[]
-  toolUsage: ToolUsage[]
-}
-
 export default function AnalyticsDashboard() {
-  const [data, setData] = useState<AnalyticsData>({ dailyViews: [], toolUsage: [] })
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<{ dailyViews: DailyView[]; toolUsage: ToolUsage[] }>({ dailyViews: [], toolUsage: [] })
 
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/analytics')
-      const json = await res.json()
-      setData({
-        dailyViews: json.dailyViews || [],
-        toolUsage: json.toolUsage || [],
-      })
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
+  const fetchData = () => {
+    setData(getAnalytics())
   }
 
   useEffect(() => {
     fetchData()
+    const interval = setInterval(fetchData, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   const toolNameMap: Record<string, string> = {
@@ -66,13 +52,16 @@ export default function AnalyticsDashboard() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">التحليلات</h3>
-        <button onClick={fetchData} className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all h-9 px-3 hover:bg-accent">
+        <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8 text-muted-foreground">جاري تحميل البيانات...</div>
+      {data.dailyViews.length === 0 && data.toolUsage.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="text-base mb-1">لا توجد بيانات تحليلات بعد</p>
+          <p className="text-sm">ستظهر البيانات هنا عند استخدام الأدوات</p>
+        </div>
       ) : (
         <>
           {/* Daily Page Views */}
@@ -99,27 +88,29 @@ export default function AnalyticsDashboard() {
           </Card>
 
           {/* Tool Usage */}
-          <Card className="border-0 shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">استخدام الأدوات</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartToolUsage} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis type="number" fontSize={10} />
-                    <YAxis type="category" dataKey="name" fontSize={10} width={100} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                      formatter={(value: number) => [value, 'استخدام']}
-                    />
-                    <Bar dataKey="count" fill="#0d9488" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          {chartToolUsage.length > 0 && (
+            <Card className="border-0 shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">استخدام الأدوات</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartToolUsage} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis type="number" fontSize={10} />
+                      <YAxis type="category" dataKey="name" fontSize={10} width={100} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        formatter={(value: number) => [value, 'استخدام']}
+                      />
+                      <Bar dataKey="count" fill="#0d9488" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recent Activity */}
           <Card className="border-0 shadow-md">

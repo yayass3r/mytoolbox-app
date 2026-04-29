@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Lock, Mail, Eye, EyeOff, LogIn } from 'lucide-react'
+import { verifyAdmin, generateToken, saveToken } from '@/lib/storage'
 
 interface AdminLoginProps {
   onLogin: (token: string) => void
@@ -24,16 +25,13 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     setError('')
 
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        onLogin(data.token)
+      const valid = await verifyAdmin(email, password)
+      if (valid) {
+        const token = generateToken()
+        saveToken(token)
+        onLogin(token)
       } else {
-        setError(data.error || 'فشل تسجيل الدخول')
+        setError('بيانات الدخول غير صحيحة')
       }
     } catch {
       setError('حدث خطأ في الاتصال')
@@ -106,6 +104,10 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
               )}
             </Button>
           </form>
+          <div className="mt-4 p-3 bg-muted/50 rounded-xl text-center">
+            <p className="text-xs text-muted-foreground">بيانات الدخول التجريبية</p>
+            <p className="text-xs font-mono text-muted-foreground mt-1" dir="ltr">admin@toolbox.com / admin123</p>
+          </div>
         </CardContent>
       </Card>
     </div>
