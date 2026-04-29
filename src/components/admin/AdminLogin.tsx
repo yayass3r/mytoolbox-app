@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Lock, Mail, Eye, EyeOff, LogIn } from 'lucide-react'
-import { verifyAdmin, generateToken, saveToken } from '@/lib/storage'
+import { verifyAdmin } from '@/lib/storage'
 
 interface AdminLoginProps {
   onLogin: (token: string) => void
@@ -27,14 +27,14 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     try {
       const valid = await verifyAdmin(email, password)
       if (valid) {
-        const token = generateToken()
-        saveToken(token)
+        // Generate a simple token
+        const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
         onLogin(token)
       } else {
         setError('بيانات الدخول غير صحيحة')
       }
     } catch {
-      setError('حدث خطأ في الاتصال')
+      setError('حدث خطأ')
     } finally {
       setLoading(false)
     }
@@ -48,7 +48,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             <Lock className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold">لوحة التحكم</h2>
-          <p className="text-white/80 mt-1">تسجيل الدخول للمتابعة</p>
+          <p className="text-white/80 mt-1">تسجيل الدخول كمشرف</p>
         </div>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,10 +104,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
               )}
             </Button>
           </form>
-          <div className="mt-4 p-3 bg-muted/50 rounded-xl text-center">
-            <p className="text-xs text-muted-foreground">بيانات الدخول التجريبية</p>
-            <p className="text-xs font-mono text-muted-foreground mt-1" dir="ltr">admin@toolbox.com / admin123</p>
-          </div>
         </CardContent>
       </Card>
     </div>
