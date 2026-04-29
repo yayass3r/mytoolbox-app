@@ -1,0 +1,17 @@
+{
+  "name": "مجموعة أدواتي",
+  "short_name": "أدواتي",
+  "description": "مجموعة أدوات مجانية للجميع",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d9488",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
