@@ -41,6 +41,10 @@ export default function AnalyticsDashboard() {
     'stopwatch': 'مؤقت وموقف',
     'text-case-converter': 'محول حالة النص',
     'qr-code-generator': 'مولد QR Code',
+    'image-to-pdf': 'صور إلى PDF',
+    'image-resizer': 'تغيير حجم الصور',
+    'image-converter': 'تحويل صيغة الصور',
+    'image-compressor': 'ضغط الصور',
   }
 
   const chartToolUsage = data.toolUsage.map(t => ({

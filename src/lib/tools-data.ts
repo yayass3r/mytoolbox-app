@@ -16,6 +16,7 @@ export const categories = [
   { id: 'أدوات النصوص', name: 'أدوات النصوص', icon: 'Type' },
   { id: 'أدوات التصميم', name: 'أدوات التصميم', icon: 'Paintbrush' },
   { id: 'أدوات الرياضيات', name: 'أدوات الرياضيات', icon: 'Sigma' },
+  { id: 'أدوات الصور', name: 'أدوات الصور', icon: 'Image' },
 ]
 
 export const toolsData: ToolDef[] = [
@@ -128,6 +129,50 @@ export const toolsData: ToolDef[] = [
     category: 'أدوات التصميم',
     color: 'text-fuchsia-600',
     bgGradient: 'from-fuchsia-500 to-pink-600',
+  },
+  {
+    name: 'Image to PDF',
+    nameAr: 'صور إلى PDF',
+    description: 'Convert images to PDF',
+    descriptionAr: 'تحويل صور متعددة إلى ملف PDF',
+    icon: 'FileText',
+    slug: 'image-to-pdf',
+    category: 'أدوات الصور',
+    color: 'text-teal-600',
+    bgGradient: 'from-teal-400 to-cyan-600',
+  },
+  {
+    name: 'Image Resizer',
+    nameAr: 'تغيير حجم الصور',
+    description: 'Resize images',
+    descriptionAr: 'تغيير أبعاد الصور بأحجام مخصصة',
+    icon: 'Maximize2',
+    slug: 'image-resizer',
+    category: 'أدوات الصور',
+    color: 'text-amber-600',
+    bgGradient: 'from-amber-500 to-orange-600',
+  },
+  {
+    name: 'Image Converter',
+    nameAr: 'تحويل صيغة الصور',
+    description: 'Convert image formats',
+    descriptionAr: 'تحويل صيغة الصور بين JPG و PNG و WEBP وغيرها',
+    icon: 'RefreshCw',
+    slug: 'image-converter',
+    category: 'أدوات الصور',
+    color: 'text-violet-600',
+    bgGradient: 'from-violet-500 to-purple-600',
+  },
+  {
+    name: 'Image Compressor',
+    nameAr: 'ضغط الصور',
+    description: 'Compress image size',
+    descriptionAr: 'ضغط وتقليل حجم الصور مع الحفاظ على الجودة',
+    icon: 'Gauge',
+    slug: 'image-compressor',
+    category: 'أدوات الصور',
+    color: 'text-rose-600',
+    bgGradient: 'from-rose-500 to-pink-600',
   },
 ]
 

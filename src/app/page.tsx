@@ -32,6 +32,10 @@ import Calculator from '@/components/tools/Calculator'
 import Stopwatch from '@/components/tools/Stopwatch'
 import TextCaseConverter from '@/components/tools/TextCaseConverter'
 import QrCodeGenerator from '@/components/tools/QrCodeGenerator'
+import ImageToPdf from '@/components/tools/ImageToPdf'
+import ImageResizer from '@/components/tools/ImageResizer'
+import ImageConverter from '@/components/tools/ImageConverter'
+import ImageCompressor from '@/components/tools/ImageCompressor'
 
 // Admin components
 import AdminLogin from '@/components/admin/AdminLogin'
@@ -50,6 +54,10 @@ const toolComponents: Record<string, React.ComponentType> = {
   'stopwatch': Stopwatch,
   'text-case-converter': TextCaseConverter,
   'qr-code-generator': QrCodeGenerator,
+  'image-to-pdf': ImageToPdf,
+  'image-resizer': ImageResizer,
+  'image-converter': ImageConverter,
+  'image-compressor': ImageCompressor,
 }
 
 export default function ToolboxApp() {
@@ -390,6 +398,10 @@ function renderToolIcon(iconName: string) {
     Timer: <span className="text-white text-lg">⏱️</span>,
     CaseSensitive: <span className="text-white text-lg">Aa</span>,
     QrCode: <span className="text-white text-lg">📱</span>,
+    FileText: <span className="text-white text-lg">📄</span>,
+    Maximize2: <span className="text-white text-lg">↔️</span>,
+    RefreshCw: <span className="text-white text-lg">🔄</span>,
+    Gauge: <span className="text-white text-lg">💾</span>,
   }
   return iconMap[iconName] || <Wrench className="w-6 h-6 text-white" />
 }
