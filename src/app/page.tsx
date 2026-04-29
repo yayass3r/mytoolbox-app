@@ -51,6 +51,10 @@ import UserLoginForm from '@/components/user/UserLoginForm'
 import UserRegisterForm from '@/components/user/UserRegisterForm'
 import UserProfile from '@/components/user/UserProfile'
 
+// Promo & Share
+import PromoSection from '@/components/PromoSection'
+import ShareSheet from '@/components/ShareSheet'
+
 type View = 'home' | 'tool' | 'auth' | 'register' | 'profile' | 'admin'
 
 const toolComponents: Record<string, React.ComponentType> = {
@@ -263,6 +267,8 @@ export default function ToolboxApp() {
                     <h1 className="text-2xl font-bold">{appName}</h1>
                     <p className="text-white/70 text-sm">أدوات مجانية للجميع</p>
                   </div>
+                  {/* Share button in header */}
+                  <ShareSheet />
                   {/* User avatar in header */}
                   {currentUser && (
                     <button
@@ -361,6 +367,11 @@ export default function ToolboxApp() {
                 </div>
               )}
 
+              {/* Promo Section */}
+              <div className="mt-6">
+                <PromoSection />
+              </div>
+
               <AdBanner position="between" />
               <div className="mt-4">
                 <AdBanner position="bottom" />
@@ -391,6 +402,7 @@ export default function ToolboxApp() {
                   <h1 className="text-lg font-bold truncate">{activeTool.nameAr}</h1>
                   <p className="text-white/70 text-xs">{activeTool.descriptionAr}</p>
                 </div>
+                <ShareSheet toolSlug={activeTool.slug} toolName={activeTool.nameAr} />
                 <button
                   onClick={() => toggleFavorite(activeTool.slug)}
                   className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm"

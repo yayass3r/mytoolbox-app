@@ -1,17 +1,36 @@
 {
-  "name": "مجموعة أدواتي",
+  "name": "مجموعة أدواتي - أدوات مجانية",
   "short_name": "أدواتي",
-  "description": "مجموعة أدوات مجانية للجميع",
+  "description": "مجموعة أدوات مجانية للجميع - 14 أداة متعددة الاستخدامات تشمل مولد كلمات المرور، محول الألوان، محول الوحدات، عداد الكلمات، منسق JSON، تشفير Base64، حاسبة متقدمة، مؤقت، محول النصوص، مولد QR، تحويل الصور إلى PDF، تغيير حجم الصور، تحويل صيغة الصور، وضغط الصور",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d9488",
   "theme_color": "#0d9488",
   "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["utilities", "productivity", "tools"],
   "icons": [
     {
       "src": "/logo.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "مجموعة أدواتي"
     }
   ]
 }
